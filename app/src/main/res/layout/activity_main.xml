@@ -38,6 +38,16 @@
                 tools:layout_editor_absoluteX="77dp"
                 tools:layout_editor_absoluteY="115dp" />
 
+            <TextView
+                android:id="@+id/TIdentNo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Identification Number"
+                android:visibility="visible"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="77dp"
+                tools:layout_editor_absoluteY="115dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

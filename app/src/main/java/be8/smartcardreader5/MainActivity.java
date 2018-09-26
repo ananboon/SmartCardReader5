@@ -50,14 +50,17 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
     private TextView mTH_FULLName;
     private TextView mBIRTH_DATE;
+    private TextView mIdent;
     private Button mCreateLead;
-
+    private ProspectModel pModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mTH_FULLName = findViewById(R.id.TName);
+        mBIRTH_DATE = findViewById(R.id.TBirthDate);
+        mIdent = findViewById(R.id.TIdentNo);
 
         mCreateLead = findViewById(R.id.BCreateLead);
         mCreateLead.setOnClickListener(this);
@@ -141,8 +144,7 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     }
     private void ReadCardInfo()  {
         Log.d(TAG,"Debug -- ReadCardInfo");
-
-        ProspectModel pModel = mCard.newProspectModel();
+        this.pModel = mCard.newProspectModel();
         pModel.transform();
         setCustomerInfo(pModel);
 //        final HTTPUtil requestUtil = new HTTPUtil(jsonObj);
@@ -162,7 +164,9 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     }
 
     private void setCustomerInfo(ProspectModel pModel){
-        mTH_FULLName.setText(pModel.getTHdisPlayName());
+        mTH_FULLName.setText(pModel.getDisPlayTHName());
+        mBIRTH_DATE.setText(pModel.getDisplayBirthDate());
+        mIdent.setText(pModel.getDisplayIdentNo());
     }
 
     private void resetView(){
@@ -182,6 +186,10 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
                 }
             }
         }).start();
+    }
+
+    private void onCardAbsent(){
+
     }
 
     private final Handler mHandler = new Handler() {
@@ -253,6 +261,11 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
     @Override
     public void onClick(View v) {
-
+        if (v == mCreateLead) {
+            Log.d(TAG,"Debug -- click creat Prospect");
+            String message = pModel.transformJsonRequest();
+            Log.d(TAG,"Debug --  creat Prospect message ::"+message);
+            doSendRequest(message);
+        }
     }
 }
