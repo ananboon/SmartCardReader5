@@ -7,29 +7,39 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
+
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
+import android.widget.EditText;
+import android.widget.ImageView;
+
 import android.widget.TextView;
 
 import com.feitian.readerdk.Tool.DK;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import static android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK;
 
 @SuppressLint({ "NewApi", "NewApi", "NewApi" })
 @TargetApi(12)
@@ -38,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     private static String TAG = MainActivity.class.getName();
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
-    private Spinner mSpinner;
     private ArrayAdapter<String> mAdapter;
     private List<String> list;
 
@@ -48,9 +57,14 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     private PendingIntent mPermissionIntent;
     private ft_reader mCard;
 
+    private EditText mEmployeeId;
+    private ImageView mPhoto;
     private TextView mTH_FULLName;
+    private TextView mEN_FULLName;
+    private TextView mGender;
     private TextView mBIRTH_DATE;
     private TextView mIdent;
+    private TextView mAddress;
     private Button mCreateLead;
     private ProspectModel pModel;
     @Override
@@ -58,29 +72,40 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTH_FULLName = findViewById(R.id.TName);
+        mEmployeeId = findViewById(R.id.EmployeeId);
+        mEmployeeId.setText("0000000009");
+        mPhoto = findViewById(R.id.BPhoto);
+
+        mTH_FULLName = findViewById(R.id.THName);
+        mEN_FULLName = findViewById(R.id.ENName);
+        mGender = findViewById(R.id.TGender);
         mBIRTH_DATE = findViewById(R.id.TBirthDate);
         mIdent = findViewById(R.id.TIdentNo);
-
+        mAddress = findViewById(R.id.TAdress);
         mCreateLead = findViewById(R.id.BCreateLead);
         mCreateLead.setOnClickListener(this);
 
-        StartCardReader();
-        OpenCard();
+
     }
     @Override
     public void onPause() {
+        Log.d(TAG,"onPause");
         super.onPause();
+        unregisterReceiver(mUsbReceiver);
     }
 
     @Override
     public void onResume() {
+        Log.d(TAG,"onResume");
         super.onResume();
+        StartCardReader();
+        OpenCard();
     }
 
     @Override
     public void onDestroy() { //
-        // m_thread.stop();
+        // m_thread.stop();;
+        Log.d(TAG,"onDestroy");
         super.onDestroy();
     }
     @Override
@@ -147,39 +172,69 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         this.pModel = mCard.newProspectModel();
         pModel.transform();
         setCustomerInfo(pModel);
-//        final HTTPUtil requestUtil = new HTTPUtil(jsonObj);
-//
-//        new Thread(new Runnable(){
-//            @Override
-//            public void run() {
-//                try {
-//                    requestUtil.sendRequest();
-//                }
-//                catch (Exception ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
-//        }).start();
+//        new ReadCard().execute(mCard);
+        Log.d(TAG,"Debug -- ReadCardInfo Complete");
 
     }
 
     private void setCustomerInfo(ProspectModel pModel){
+        Log.d(TAG,"Debug -- setCustomerInfo");
         mTH_FULLName.setText(pModel.getDisPlayTHName());
+        mEN_FULLName.setText(pModel.getDisplayEnName());
+        mGender.setText(pModel.getDisplayGender());
         mBIRTH_DATE.setText(pModel.getDisplayBirthDate());
         mIdent.setText(pModel.getDisplayIdentNo());
+        mAddress.setText(pModel.getDisplayAddress());
+//        byte[] imageInByte =  pModel.getDisplayImageByte();
+//        Bitmap bm = BitmapFactory.decodeByteArray(imageInByte, 0, imageInByte.length);
+//        DisplayMetrics dm = new DisplayMetrics();
+//        getWindowManager().getDefaultDisplay().getMetrics(dm);
+//        mPhoto.setMinimumHeight(dm.heightPixels);
+//        mPhoto.setMinimumWidth(dm.widthPixels);
+//        mPhoto.setImageBitmap(bm);
+
+
+
     }
 
-    private void resetView(){
 
+
+    private void goToSF1(String id){
+       // <scheme_name>sObject/<id>/view
+        // salesforce1://sObject/001D000000Jwj9v/view
+        Log.d(TAG,"Debug gotoSF1");
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String navigateTo = "salesforce1://sObject/"+id+"/view";
+        intent.setData(Uri.parse(navigateTo));
+
+        Log.d(TAG,"Debug gotoSF1 before setactivity");
+        intent.addFlags(FLAG_ACTIVITY_MULTIPLE_TASK);
+        startActivity(intent);
+//        finish();
+    }
+
+    private void onResponseMessage(String responseJson){
+        Log.d(TAG,"Debug -- onResponseMessage ::");
+        Log.d(TAG,"Debug -- responseMessage ::"+responseJson);
+        try {
+            JSONObject jsonObj = new JSONObject(responseJson);
+            String targetId = jsonObj.getString("targetId");
+            goToSF1(targetId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void doSendRequest(String messsage){
         final HTTPUtil requestUtil = new HTTPUtil(messsage);
+
         new Thread(new Runnable(){
             @Override
             public void run() {
                 try {
                     requestUtil.sendRequest();
+                    String responseMessage = requestUtil.getResponseMessage();
+                    onResponseMessage(responseMessage);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -189,6 +244,10 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     }
 
     private void onCardAbsent(){
+        resetView();
+        this.pModel = null;
+    }
+    private void resetView(){
 
     }
 
@@ -200,6 +259,12 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
                     switch (msg.arg1) {
                         case DK.CARD_ABSENT:
                             Log.d(TAG,"IFD card absent");
+                            onCardAbsent();
+                            try {
+                                mCard.PowerOff();
+                            } catch (FtBlueReadException e) {
+                                e.printStackTrace();
+                            }
                             break;
                         case DK.CARD_PRESENT:
                             Log.d(TAG,"IFD card persent");
@@ -262,10 +327,27 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     @Override
     public void onClick(View v) {
         if (v == mCreateLead) {
-            Log.d(TAG,"Debug -- click creat Prospect");
+            Log.d(TAG,"Debug -- click create Prospect");
+            Log.d(TAG,"Debug -- click  mEmployeeId.getText()"+mEmployeeId.getText());
+            this.pModel.EMPLOYEE_ID = String.valueOf(mEmployeeId.getText());
             String message = pModel.transformJsonRequest();
             Log.d(TAG,"Debug --  creat Prospect message ::"+message);
             doSendRequest(message);
         }
     }
+
+//    private class ReadCard extends AsyncTask<ft_reader, Void, ProspectModel> {
+//
+//        @Override
+//        protected ProspectModel doInBackground(ft_reader... ft_readers) {
+//            ProspectModel pModel = mCard.newProspectModel();
+//            pModel.transform();
+//            return pModel;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(ProspectModel pModel) {
+//            setCustomerInfo(pModel);
+//        }
+//    }
 }

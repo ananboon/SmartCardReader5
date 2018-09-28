@@ -3,13 +3,14 @@ package be8.smartcardreader5;
 import android.annotation.SuppressLint;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 
 import com.feitian.reader.devicecontrol.Card;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class ft_reader {
     private static String TAG = ft_reader.class.getName();
@@ -28,9 +29,9 @@ public class ft_reader {
     private byte[] CMD_ENFULLNAME = new byte[]{(byte)0x80, (byte)0xb0, 0x00, 0x75, 0x02, 0x00, 0x64};
     private byte[] CMD_BIRTH = new byte[]{(byte)0x80, (byte)0xb0, 0x00, (byte)0xD9, 0x02, 0x00, 0x08};
     private byte[] CMD_GENDER = new byte[]{(byte)0x80, (byte)0xb0, 0x00,(byte) 0xE1, 0x02, 0x00, 0x01};
-    private byte[] CMD_ISSUER = new byte[]{(byte)0x80, (byte)0xb0, 0x00, (byte)0xF6, 0x02, 0x00, 0x64};
-    private byte[] CMD_ISSUE = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x67, 0x02, 0x00, 0x08};
-    private byte[] CMD_EXPIRE = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x6F, 0x02, 0x00, 0x08};
+//    private byte[] CMD_ISSUER = new byte[]{(byte)0x80, (byte)0xb0, 0x00, (byte)0xF6, 0x02, 0x00, 0x64};
+//    private byte[] CMD_ISSUE = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x67, 0x02, 0x00, 0x08};
+//    private byte[] CMD_EXPIRE = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x6F, 0x02, 0x00, 0x08};
     private byte[] CMD_ADDRESS = new byte[]{(byte)0x80, (byte)0xb0, 0x15, 0x79, 0x02, 0x00, 0x64};
 
     private byte[] CMD_PHOTO1 = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x7B, 0x02, 0x00, (byte)0xFF};
@@ -186,49 +187,27 @@ public class ft_reader {
         Log.d(TAG,"newProspectModel");
 
         firstConnect();
-        String identNo = getCID();
-        String THFullName = getTHFullName();
-        String ENFullName = getENFullName();
-        String BirthDate = getBirthDate();
-        String image = getImage();
 
         ProspectModel pModel = new ProspectModel();
-        pModel.setTHFullName(THFullName);
-        pModel.setENFullName(ENFullName);
-        pModel.setIdentificationNo(identNo);
-        pModel.setBirthDate(BirthDate);
-        pModel.setImage(image);
-
+        pModel.TH_FULLNAME = Converter.GetUTF8FromBytes(getData(CMD_THFULLNAME));
+        pModel.EN_FULLNAME = Converter.GetUTF8FromBytes(getData(CMD_ENFULLNAME));
+        pModel.IDENT_NO = Converter.GetUTF8FromBytes(getData(CMD_CID));
+        pModel.BRTH_DT = Converter.GetUTF8FromBytes(getData(CMD_BIRTH));
+        pModel.GENDER = Converter.GetUTF8FromBytes(getData(CMD_GENDER));
+        pModel.ADDRESS = Converter.GetUTF8FromBytes(getData(CMD_ADDRESS));
+        Log.d(TAG,"DEBUG -- GENDER ::"+pModel.GENDER);
+        Log.d(TAG,"DEBUG -- ADDRESS ::"+pModel.ADDRESS);
+//        pModel.setImagebyteArray(getImage());
         return pModel;
     }
 
     private void firstConnect(){
         inner_card.transApdu(SELECT.length+THAI_CARD.length, ArrayUtils.addAll(SELECT,THAI_CARD), new int[2], new byte[1024]);
     }
-    private String getCID(){
-        byte[] array = getData(CMD_CID);
-        String identNo = Converter.getUTF8String(Converter.convertTis620ToUTF8(array));
-        return identNo;
-    }
 
-    private String getTHFullName(){
-        byte[] array = getData(CMD_THFULLNAME);
-        String THFullName = Converter.getUTF8String(Converter.convertTis620ToUTF8(array));
-        return THFullName;
-    }
-
-    private String getENFullName(){
-        byte[] array = getData(CMD_ENFULLNAME);
-        String ENFullName = Converter.getUTF8String(Converter.convertTis620ToUTF8(array));
-        return ENFullName;
-    }
-    private String getBirthDate(){
-        byte[] array = getData(CMD_BIRTH);
-        String BIRTH_DATE = Converter.getUTF8String(Converter.convertTis620ToUTF8(array));
-        return BIRTH_DATE;
-    }
-    private String getImage(){
+    private byte[] getImage(){
         Log.d(TAG,"Debug -- getImage:: ");
+
         byte[] array = getData(CMD_PHOTO1);
         array = ArrayUtils.addAll(array,getData(CMD_PHOTO2));
         array = ArrayUtils.addAll(array,getData(CMD_PHOTO3));
@@ -252,56 +231,19 @@ public class ft_reader {
         array = ArrayUtils.addAll(array,getData(CMD_PHOTO18));
         array = ArrayUtils.addAll(array,getData(CMD_PHOTO19));
         array = ArrayUtils.addAll(array,getData(CMD_PHOTO20));
-        return Converter.byte2HexStr(Converter.convertTis620ToUTF8(array),array.length);
-    }
+        Log.d(TAG,"Debug -- getImage 20:: ");
 
-    private byte[] getData(byte[] cmd){
-        byte[] array = new byte[1024];
-        int[] receiveln = new int[2];
-        inner_card.transApdu(cmd.length, cmd, receiveln, array);
-        inner_card.transApdu(req.length+1, ArrayUtils.addAll(req,cmd[cmd.length-1]), receiveln, array);
         return array;
     }
 
-//    public String printCardInfo() throws UnsupportedEncodingException {
-//        String str = "";
-//        Log.d(TAG,"PrintCard Info");
-//        byte[] array = new byte[1024];
-//        int[] receiveln = new int[2];
-//
-//        Log.d(TAG,"PrintCard 2::");
-//        inner_card.transApdu(SELECT.length+THAI_CARD.length, ArrayUtils.addAll(SELECT,THAI_CARD), receiveln, array);
-//
-//        array = getData(CMD_CID);
-//        String identNo = getUTF8String(convertTis620ToUTF8(array));
-//        Log.d(TAG,"PrintCard idenNo ::"+identNo);
-//        str += "idenNo = "+identNo+"\n";
-//
-//        array = getData(CMD_THFULLNAME);
-//        String THFullName = getUTF8String(convertTis620ToUTF8(array));
-//        str += "THFullName = "+THFullName+"\n";
-//        Log.d(TAG,"PrintCard THFullName ::"+THFullName);
-//
-//        array = getData(CMD_ENFULLNAME);
-//        String ENFULLNAME = getUTF8String(convertTis620ToUTF8(array));
-//        Log.d(TAG,"PrintCard ENFULLNAME ::"+ENFULLNAME);
-//        str += "ENFULLNAME = "+ENFULLNAME+"\n";
-//
-//        array = getData(CMD_BIRTH);
-//        String BIRTH_DATE = getUTF8String(convertTis620ToUTF8(array));
-//        str += "BIRTH_DATE = "+BIRTH_DATE+"\n";
-//        Log.d(TAG,"PrintCard BIRTH_DATE ::"+BIRTH_DATE);
-//        return str;
-//    }
-//
-//    private String getUTF8String(byte[] bytes) throws UnsupportedEncodingException {
-//        String str = new String(bytes,"UTF-8");
-//        return str;
-//    }
-//
-//    private byte[] convertTis620ToUTF8(byte[] encoded) throws UnsupportedEncodingException {
-//
-//        String theString = new String(encoded, "TIS620");
-//        return theString.getBytes("UTF-8");
-//    }
+    private byte[] getData(byte[] cmd){
+        Integer checkByte = 2;
+        byte[] array = new byte[258];
+        int[] receiveln = new int[2];
+        inner_card.transApdu(cmd.length, cmd, receiveln, array);
+        inner_card.transApdu(req.length+1, ArrayUtils.addAll(req,cmd[cmd.length-1]), receiveln, array);
+        return Arrays.copyOfRange(array, 0, array.length-1-checkByte);
+    }
+
+
 }

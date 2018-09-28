@@ -18,8 +18,9 @@ import java.net.URL;
 public class HTTPUtil {
     private static String TAG = HTTPUtil.class.getName();
     private String urlStr = "https://kasikornbank--dipchip.cs72.my.salesforce.com/services/apexrest/DipChipService";
-    private String accessToken = "Bearer 00D5D0000008uo3!AREAQA09MN6XpRthybgdqW1W2UfPnxHUvsdmcw_Uak2YGTALMErEpNobTgLYoH1bI8yc4nwZlHwwJxEixDqTCQZLF7pR5Aik";
+    private String accessToken = "Bearer 00D5D0000008uo3!AREAQG3yK1hL.VIp2G6PdcU9cvo0cVmrEqJSYCnoJDg9OCSMr8MBeRZ59222yf7uPMf3T2nawOGfte.QiaHiettO1djeBinN";
     private String message;
+    private String responseMessage;
     public HTTPUtil(String message){
         this.message = message;
         Log.d(TAG,"Debug -- message ::"+message);
@@ -73,8 +74,12 @@ public class HTTPUtil {
             sb.append(line);
             break;
         }
+        responseMessage = sb.toString();
         Log.d(TAG,"readStream ::"+sb.toString());
+    }
 
+    public String getResponseMessage(){
+        return this.responseMessage;
     }
 
 }

@@ -1,14 +1,18 @@
 package be8.smartcardreader5;
 
+import android.text.Editable;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Map;
+
 public class ProspectModel {
     private static String TAG = ProspectModel.class.getName();
-    private String IDENT_NO;
-    private String BRTH_DT;
+    public String EMPLOYEE_ID;
+    public String IDENT_NO;
+    public String BRTH_DT;
     private String TH_TTL;
     private String TH_FRST_NM;
     private String TH_SURNM;
@@ -17,28 +21,23 @@ public class ProspectModel {
     private String EN_SURNM;
     private String IMAGE;
 
-    private String TH_FULLNAME;
-    private String EN_FULLNAME;
+    public String GENDER;
+    public String ADDRESS;
+    private byte[] IMAGE_BYTE_ARRAY;
+
+    public String TH_FULLNAME;
+    public String EN_FULLNAME;
 
     private static String reponse = "jsonResponse";
     private static String endOfChar = "\u0090";
     public ProspectModel(){}
 
-    public void setTHFullName(String thFullName){
-        this.TH_FULLNAME = thFullName;
-    }
-
-    public void setENFullName(String enFullName){
-        this.EN_FULLNAME = enFullName;
-    }
-    public void setIdentificationNo(String identNo){
-        this.IDENT_NO = identNo;
-    }
-    public void setBirthDate(String birthDate){
-        this.BRTH_DT = birthDate;
-    }
     public void setImage(String image){
         this.IMAGE = image;
+    }
+
+    public void setImagebyteArray(byte[] bytes){
+        this.IMAGE_BYTE_ARRAY = bytes;
     }
 
     private void formatTHFullName(){
@@ -60,7 +59,11 @@ public class ProspectModel {
         this.EN_SURNM = split[3];
         Log.d(TAG,"DEBUG -- after formatENFullName EN_FULLNAME ::"+EN_FULLNAME);
     }
-
+    private void formatGender(){
+        Log.d(TAG,"DEBUG -- before formatGender GENDER ::"+GENDER);
+        this.GENDER =this.GENDER.split(endOfChar)[0];
+        Log.d(TAG,"DEBUG -- After formatGender GENDER ::"+GENDER);
+    }
     private void formatBirthDate(){
         // yearMonthDay 20180226
         Log.d(TAG,"DEBUG -- before formatBirthDate BRTH_DT ::"+BRTH_DT);
@@ -77,16 +80,29 @@ public class ProspectModel {
         Log.d(TAG,"DEBUG -- after formatIdent IDENT_NO ::"+IDENT_NO);
     }
 
+    private void formatAddress(){
+        Log.d(TAG,"DEBUG -- before formatIdent ADDRESS ::"+ADDRESS);
+        String[] split = this.ADDRESS.split(endOfChar);
+        this.ADDRESS = split[0].replace('#',' ');;;
+    }
 
     public void transform(){
         formatTHFullName();
         formatENFullName();
+        formatGender();
         formatBirthDate();
         formatIdent();
+        formatAddress();
     }
 
     public String getDisPlayTHName() {
         return this.TH_TTL +" "+ this.TH_FRST_NM +" "+ this.TH_SURNM;
+    }
+    public String getDisplayEnName(){
+        return this.EN_TTL +" "+ this.EN_FRST_NM +" "+ this.EN_SURNM;
+    }
+    public String getDisplayGender(){
+        return getGenDerByCode(this.GENDER);
     }
 
     public String getDisplayBirthDate(){
@@ -97,11 +113,29 @@ public class ProspectModel {
         return this.IDENT_NO;
     }
 
+    public byte[] getDisplayImageByte(){
+        return this.IMAGE_BYTE_ARRAY;
+    }
+
+    public String getDisplayAddress(){
+        return this.ADDRESS;
+    }
+
+    private String getGenDerByCode(String code){
+        String gender;
+        switch (code) {
+            case "1": gender = "ชาย"; break;
+            case "2": gender = "หญิง"; break;
+            default: gender = "";
+        }
+        return gender;
+    }
     public String transformJsonRequest(){
 
         JSONObject dipChipModel = new JSONObject();
         JSONObject jsonParam = new JSONObject();
         try {
+            dipChipModel.put("EMPLOYEE_ID", this.EMPLOYEE_ID);
             dipChipModel.put("IDENT_NO", this.IDENT_NO);
             dipChipModel.put("BRTH_DT",  this.BRTH_DT);
 
