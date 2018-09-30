@@ -1,12 +1,8 @@
 package be8.smartcardreader5;
 
-import android.text.Editable;
 import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Map;
 
 public class ProspectModel {
     private static String TAG = ProspectModel.class.getName();

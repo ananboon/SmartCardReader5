@@ -6,7 +6,7 @@
     <string name="ENName_LABEL">Name</string>
     <string name="GENER_LABEL">เพศ</string>
     <string name="BDATE_LABEL">วันเกิด</string>
-    <string name="IDENT_LABEL">เลขบัตรประจำตัวประชาชน</string>
+    <string name="IDENT_LABEL">เลขบัตรประชาชน</string>
     <string name="ADRESS_LABEL">ที่อยู่</string>
-
+    <string name="B_CREATE_LEAD_LABEL">Create Lead</string>
 </resources>

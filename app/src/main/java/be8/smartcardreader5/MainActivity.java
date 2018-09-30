@@ -22,9 +22,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
+import android.view.animation.AlphaAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import android.widget.TextView;
@@ -67,6 +69,10 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     private TextView mAddress;
     private Button mCreateLead;
     private ProspectModel pModel;
+
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
+    FrameLayout progressBarHolder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         mCreateLead = findViewById(R.id.BCreateLead);
         mCreateLead.setOnClickListener(this);
 
-
+        progressBarHolder = (FrameLayout) findViewById(R.id.progressBarHolder);
     }
     @Override
     public void onPause() {
@@ -169,12 +175,14 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     }
     private void ReadCardInfo()  {
         Log.d(TAG,"Debug -- ReadCardInfo");
-        this.pModel = mCard.newProspectModel();
-        pModel.transform();
-        setCustomerInfo(pModel);
-//        new ReadCard().execute(mCard);
+        //Main thread
+//        this.pModel = mCard.newProspectModel();
+//        pModel.transform();
+//        setCustomerInfo(pModel);
+        //Main thread
+        new ReadCard().execute(mCard);
         Log.d(TAG,"Debug -- ReadCardInfo Complete");
-
+        mCreateLead.setEnabled(true);
     }
 
     private void setCustomerInfo(ProspectModel pModel){
@@ -185,15 +193,13 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         mBIRTH_DATE.setText(pModel.getDisplayBirthDate());
         mIdent.setText(pModel.getDisplayIdentNo());
         mAddress.setText(pModel.getDisplayAddress());
-//        byte[] imageInByte =  pModel.getDisplayImageByte();
-//        Bitmap bm = BitmapFactory.decodeByteArray(imageInByte, 0, imageInByte.length);
-//        DisplayMetrics dm = new DisplayMetrics();
-//        getWindowManager().getDefaultDisplay().getMetrics(dm);
-//        mPhoto.setMinimumHeight(dm.heightPixels);
-//        mPhoto.setMinimumWidth(dm.widthPixels);
-//        mPhoto.setImageBitmap(bm);
-
-
+        byte[] imageInByte =  pModel.getDisplayImageByte();
+        Bitmap bm = BitmapFactory.decodeByteArray(imageInByte, 0, imageInByte.length);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        mPhoto.setMinimumHeight(dm.heightPixels);
+        mPhoto.setMinimumWidth(dm.widthPixels);
+        mPhoto.setImageBitmap(bm);
 
     }
 
@@ -207,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         String navigateTo = "salesforce1://sObject/"+id+"/view";
         intent.setData(Uri.parse(navigateTo));
 
-        Log.d(TAG,"Debug gotoSF1 before setactivity");
+        Log.d(TAG,"Debug gotoSF1 naviage to "+navigateTo);
         intent.addFlags(FLAG_ACTIVITY_MULTIPLE_TASK);
         startActivity(intent);
 //        finish();
@@ -232,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
             @Override
             public void run() {
                 try {
+                    requestUtil.getAccessToken();
                     requestUtil.sendRequest();
                     String responseMessage = requestUtil.getResponseMessage();
                     onResponseMessage(responseMessage);
@@ -248,7 +255,20 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         this.pModel = null;
     }
     private void resetView(){
-
+        mCreateLead.setEnabled(false);
+        mTH_FULLName.setText("");
+        mEN_FULLName.setText("");
+        mGender.setText("");
+        mBIRTH_DATE.setText("");
+        mIdent.setText("");
+        mAddress.setText("");
+//        byte[] imageInByte =  pModel.getDisplayImageByte();
+//        Bitmap bm = BitmapFactory.decodeByteArray(imageInByte, 0, imageInByte.length);
+//        DisplayMetrics dm = new DisplayMetrics();
+//        getWindowManager().getDefaultDisplay().getMetrics(dm);
+//        mPhoto.setMinimumHeight(dm.heightPixels);
+//        mPhoto.setMinimumWidth(dm.widthPixels);
+//        mPhoto.setImageBitmap(bm);
     }
 
     private final Handler mHandler = new Handler() {
@@ -336,18 +356,35 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         }
     }
 
-//    private class ReadCard extends AsyncTask<ft_reader, Void, ProspectModel> {
-//
-//        @Override
-//        protected ProspectModel doInBackground(ft_reader... ft_readers) {
-//            ProspectModel pModel = mCard.newProspectModel();
-//            pModel.transform();
-//            return pModel;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(ProspectModel pModel) {
-//            setCustomerInfo(pModel);
-//        }
-//    }
+    private class ReadCard extends AsyncTask<ft_reader, Void, ProspectModel> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            inAnimation = new AlphaAnimation(0f, 1f);
+            inAnimation.setDuration(200);
+            progressBarHolder.setAnimation(inAnimation);
+            progressBarHolder.setVisibility(View.VISIBLE);
+        }
+
+
+
+        @Override
+        protected ProspectModel doInBackground(ft_reader... ft_readers) {
+            ProspectModel pModel = mCard.newProspectModel();
+            pModel.transform();
+            return pModel;
+        }
+
+        @Override
+        protected void onPostExecute(ProspectModel pModel) {
+            setCustomerInfo(pModel);
+            outAnimation = new AlphaAnimation(1f, 0f);
+            outAnimation.setDuration(200);
+            progressBarHolder.setAnimation(outAnimation);
+            progressBarHolder.setVisibility(View.GONE);
+        }
+
+
+    }
 }

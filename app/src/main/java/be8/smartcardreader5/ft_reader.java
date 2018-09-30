@@ -195,9 +195,7 @@ public class ft_reader {
         pModel.BRTH_DT = Converter.GetUTF8FromBytes(getData(CMD_BIRTH));
         pModel.GENDER = Converter.GetUTF8FromBytes(getData(CMD_GENDER));
         pModel.ADDRESS = Converter.GetUTF8FromBytes(getData(CMD_ADDRESS));
-        Log.d(TAG,"DEBUG -- GENDER ::"+pModel.GENDER);
-        Log.d(TAG,"DEBUG -- ADDRESS ::"+pModel.ADDRESS);
-//        pModel.setImagebyteArray(getImage());
+        pModel.setImagebyteArray(getImage());
         return pModel;
     }
 

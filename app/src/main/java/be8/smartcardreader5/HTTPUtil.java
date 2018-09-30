@@ -5,6 +5,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,12 +14,20 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class HTTPUtil {
     private static String TAG = HTTPUtil.class.getName();
+    private static final String  client_id = "3MVG910YPh8zrcR1.6xM.eQOAiIAYRgKQlmcRyCEvLDQGCogs2_lZaGg0GB3sNW72zBmUp00_uyjd689c.10p";
+    private static final String client_secret = "8584147721397286853";
+    private static final String refresh_token = "5Aep861915i4NP4R5PhP5i3bV7srdSW6FwcqqR6SE7cKzmHDFyRxmgkfeYcwJNoaf8_NqYtDq3yCd5L9EQyJrRM";
+    private static final String tokenURL = "https://test.salesforce.com/services/oauth2/token";
     private String urlStr = "https://kasikornbank--dipchip.cs72.my.salesforce.com/services/apexrest/DipChipService";
-    private String accessToken = "Bearer 00D5D0000008uo3!AREAQG3yK1hL.VIp2G6PdcU9cvo0cVmrEqJSYCnoJDg9OCSMr8MBeRZ59222yf7uPMf3T2nawOGfte.QiaHiettO1djeBinN";
+    private String access_token;
+    private String token_type;
     private String message;
     private String responseMessage;
     public HTTPUtil(String message){
@@ -41,7 +50,7 @@ public class HTTPUtil {
             conn.setFixedLengthStreamingMode(message.getBytes().length);
             conn.setRequestProperty("Content-Type", "application/json;charset=utf-8");
             conn.setRequestProperty("X-Requested-With", "XMLHttpRequest");
-            conn.setRequestProperty("Authorization", this.accessToken);
+            conn.setRequestProperty("Authorization", this.token_type+" "+this.access_token);
 
             //open
             conn.connect();
@@ -54,7 +63,7 @@ public class HTTPUtil {
 
             //do somehting with response
             is = conn.getInputStream();
-            readStream(is);
+            responseMessage = readStream(is);
         }finally {
             //clean up
             os.close();
@@ -64,18 +73,52 @@ public class HTTPUtil {
 
     }
 
-    private void readStream(InputStream in) throws IOException {
+    public void getAccessToken(){
+        String urlRarameter = "grant_type=refresh_token";
+        urlRarameter += "&client_id="+client_id;
+        urlRarameter += "&client_secret="+client_secret;
+        urlRarameter += "&refresh_token="+refresh_token;
+        HttpURLConnection conn = null;
+
+        try {
+            URL url = new URL(tokenURL+"?"+urlRarameter);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setInstanceFollowRedirects(false);
+            conn.setUseCaches(false);
+            conn.setRequestProperty("charset","utf-8");
+            conn.setDoInput(true);
+
+            InputStream in = new BufferedInputStream(conn.getInputStream());
+            String responseJson = readStream(in);
+            try {
+                Log.d(TAG,"DEBUG -- responseJson ::"+responseJson);
+                JSONObject jsonObj = new JSONObject(responseJson);
+                this.token_type =  jsonObj.getString("token_type");
+                this.access_token = jsonObj.getString("access_token");
+                Log.d(TAG,"DEBUG -- jsonObject ::"+jsonObj);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            conn.disconnect();
+        }
+    }
+
+    private String readStream(InputStream in) throws IOException {
         Log.d(TAG,"readStream ::");
         BufferedReader br=new BufferedReader(new InputStreamReader(in));
         StringBuffer sb = new StringBuffer("");
-        String line="";
-
+        String line;
         while((line = br.readLine()) != null) {
             sb.append(line);
             break;
         }
-        responseMessage = sb.toString();
-        Log.d(TAG,"readStream ::"+sb.toString());
+        return sb.toString();
+//        responseMessage = sb.toString();
+//        Log.d(TAG,"readStream ::"+sb.toString());
     }
 
     public String getResponseMessage(){
