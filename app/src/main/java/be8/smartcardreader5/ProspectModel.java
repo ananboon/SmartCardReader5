@@ -3,7 +3,6 @@ package be8.smartcardreader5;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 public class ProspectModel {
     private static String TAG = ProspectModel.class.getName();
     public String EMPLOYEE_ID;
@@ -47,39 +46,39 @@ public class ProspectModel {
     }
     private void formatENFullName(){
         //For title#FirstName##LastName      ���
-        Log.d(TAG,"DEBUG -- formatENFullName EN_FULLNAME ::"+EN_FULLNAME);
         String name = this.EN_FULLNAME.split(" ")[0];
         String[] split = name.split("#");
         this.EN_TTL = split[0];
         this.EN_FRST_NM = split[1];
         this.EN_SURNM = split[3];
-        Log.d(TAG,"DEBUG -- after formatENFullName EN_FULLNAME ::"+EN_FULLNAME);
     }
     private void formatGender(){
-        Log.d(TAG,"DEBUG -- before formatGender GENDER ::"+GENDER);
         this.GENDER =this.GENDER.split(endOfChar)[0];
-        Log.d(TAG,"DEBUG -- After formatGender GENDER ::"+GENDER);
     }
     private void formatBirthDate(){
         // yearMonthDay 20180226
-        Log.d(TAG,"DEBUG -- before formatBirthDate BRTH_DT ::"+BRTH_DT);
+//        Log.d(TAG,"DEBUG -- before formatBirthDate BRTH_DT ::"+BRTH_DT);
         String[] split = this.BRTH_DT.split(endOfChar);
         String temp_BRTH_DT = split[0];
         BRTH_DT = temp_BRTH_DT.substring(0,4) + "-" + temp_BRTH_DT.substring(4,6) + "-" + temp_BRTH_DT.substring(6,8);
-        Log.d(TAG,"DEBUG -- after formatBirthDate BRTH_DT ::"+BRTH_DT);
+//        Log.d(TAG,"DEBUG -- after formatBirthDate BRTH_DT ::"+BRTH_DT);
     }
     private void formatIdent(){
         // xxxxxxxxxxxx
-        Log.d(TAG,"DEBUG -- before formatIdent IDENT_NO ::"+IDENT_NO);
+//        Log.d(TAG,"DEBUG -- before formatIdent IDENT_NO ::"+IDENT_NO);
         String[] split = this.IDENT_NO.split(endOfChar);
         this.IDENT_NO = split[0];
-        Log.d(TAG,"DEBUG -- after formatIdent IDENT_NO ::"+IDENT_NO);
+//        Log.d(TAG,"DEBUG -- after formatIdent IDENT_NO ::"+IDENT_NO);
     }
 
     private void formatAddress(){
-        Log.d(TAG,"DEBUG -- before formatIdent ADDRESS ::"+ADDRESS);
+//        Log.d(TAG,"DEBUG -- before formatIdent ADDRESS ::"+ADDRESS);
         String[] split = this.ADDRESS.split(endOfChar);
         this.ADDRESS = split[0].replace('#',' ');;;
+    }
+
+    private void formatImage(){
+        this.IMAGE = Converter.byte2HexStr(this.IMAGE_BYTE_ARRAY,this.IMAGE_BYTE_ARRAY.length);
     }
 
     public void transform(){
@@ -89,6 +88,7 @@ public class ProspectModel {
         formatBirthDate();
         formatIdent();
         formatAddress();
+        formatImage();
     }
 
     public String getDisPlayTHName() {

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SmartCardReader5</string>
+    <string name="app_name">SmartCardReader</string>
 
     <string name="EMPLOYEEID_LABEL">รหัสพนักงาน</string>
     <string name="THName_LABEL">ชื่อ</string>

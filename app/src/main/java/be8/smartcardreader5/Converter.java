@@ -16,6 +16,17 @@ public class Converter {
         return str;
     }
 
+    public static String byte2HexStr(byte[] b, int len) {
+        String stmp;
+        StringBuilder sb = new StringBuilder("");
+        for (int n = 0; n < len; n++) {
+            stmp = Integer.toHexString(b[n] & 0xFF);
+            sb.append((stmp.length() == 1) ? "0" + stmp : stmp);
+            sb.append(" ");
+        }
+        return sb.toString().toUpperCase().trim();
+    }
+
 
 
 

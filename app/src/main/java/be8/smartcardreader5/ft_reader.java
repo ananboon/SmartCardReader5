@@ -3,20 +3,19 @@ package be8.smartcardreader5;
 import android.annotation.SuppressLint;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 
 import com.feitian.reader.devicecontrol.Card;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.InputStream;
 import java.util.Arrays;
 
 public class ft_reader {
     private static String TAG = ft_reader.class.getName();
     private boolean isPowerOn = false;
     private Card inner_card;
-
 
     private byte[] req = new byte[]{0x00, (byte)0xc0, 0x00, 0x00};
     // Check card
@@ -101,7 +100,7 @@ public class ft_reader {
     public int PowerOff() throws FtBlueReadException {
         int ret = inner_card.PowerOff();
         if (ret != STATUS.RETURN_SUCCESS) {
-            throw new FtBlueReadException("Power On Failed");
+            throw new FtBlueReadException("Power Off Failed");
         }
         isPowerOn = false;
         return ret;
@@ -146,6 +145,7 @@ public class ft_reader {
             throw new FtBlueReadException("not support cardStatusMonitoring");
         }
     }
+
 
     public int transApdu(int tx_length, final byte tx_buffer[],
                          int rx_length[], final byte rx_buffer[]) throws FtBlueReadException {
@@ -238,9 +238,21 @@ public class ft_reader {
         Integer checkByte = 2;
         byte[] array = new byte[258];
         int[] receiveln = new int[2];
-        inner_card.transApdu(cmd.length, cmd, receiveln, array);
-        inner_card.transApdu(req.length+1, ArrayUtils.addAll(req,cmd[cmd.length-1]), receiveln, array);
+        int ret = inner_card.transApdu(cmd.length, cmd, receiveln, array);
+        LogCardStatus(ret,"Request");
+        ret = inner_card.transApdu(req.length+1, ArrayUtils.addAll(req,cmd[cmd.length-1]), receiveln, array);
+        LogCardStatus(ret,"Response");
         return Arrays.copyOfRange(array, 0, array.length-1-checkByte);
+    }
+
+    private void LogCardStatus(Integer ret,String type){
+        if (ret == STATUS.BUFFER_NOT_ENOUGH) {
+            Log.d(TAG,type +":: receive buffer not enough");
+        } else if (ret == STATUS.TRANS_RETURN_ERROR) {
+            Log.d(TAG,type+":: trans apdu error");
+        }else if (ret != STATUS.RETURN_SUCCESS){
+            Log.d(TAG,type+":: trans apdu error");
+        }
     }
 
 
