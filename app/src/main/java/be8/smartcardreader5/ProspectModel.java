@@ -37,7 +37,7 @@ public class ProspectModel {
 
     private void formatTHFullName(){
         //For title#FirstName##LastName      ���
-        Log.d(TAG,"DEBUG -- formatTHFullName TH_FULLNAME ::"+TH_FULLNAME);
+//        Log.d(TAG,"DEBUG -- formatTHFullName TH_FULLNAME ::"+TH_FULLNAME);
         String name = this.TH_FULLNAME.split(" ")[0];
         String[] split = name.split("#");
         this.TH_TTL = split[0];
@@ -66,15 +66,14 @@ public class ProspectModel {
     private void formatIdent(){
         // xxxxxxxxxxxx
 //        Log.d(TAG,"DEBUG -- before formatIdent IDENT_NO ::"+IDENT_NO);
-        String[] split = this.IDENT_NO.split(endOfChar);
-        this.IDENT_NO = split[0];
+        this.IDENT_NO = this.IDENT_NO.split(endOfChar)[0];
 //        Log.d(TAG,"DEBUG -- after formatIdent IDENT_NO ::"+IDENT_NO);
     }
 
     private void formatAddress(){
 //        Log.d(TAG,"DEBUG -- before formatIdent ADDRESS ::"+ADDRESS);
         String[] split = this.ADDRESS.split(endOfChar);
-        this.ADDRESS = split[0].replace('#',' ');;;
+        this.ADDRESS = split[0].replace('#',' ');
     }
 
     private void formatImage(){

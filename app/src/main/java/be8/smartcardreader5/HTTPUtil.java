@@ -110,13 +110,13 @@ public class HTTPUtil {
         BufferedReader br=new BufferedReader(new InputStreamReader(in));
         StringBuffer sb = new StringBuffer("");
         String line;
+
         while((line = br.readLine()) != null) {
             sb.append(line);
             break;
         }
         return sb.toString();
-//        responseMessage = sb.toString();
-//        Log.d(TAG,"readStream ::"+sb.toString());
+
     }
 
     public String getResponseMessage(){

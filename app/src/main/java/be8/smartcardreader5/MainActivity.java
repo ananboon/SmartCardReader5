@@ -18,6 +18,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -36,7 +38,9 @@ import com.feitian.readerdk.Tool.DK;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.HttpCookie;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -73,10 +77,11 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         mEmployeeId = findViewById(R.id.EmployeeId);
-        mEmployeeId.setText("0000000009");
+//        mEmployeeId.setText("0000000009");
         mPhoto = findViewById(R.id.BPhoto);
 
         mTH_FULLName = findViewById(R.id.THName);
@@ -92,34 +97,58 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
                 ACTION_USB_PERMISSION), 0);
+
+        mEmployeeId.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                mCreateLead.setEnabled(getEnableCreateLeadButton());
+            }
+        });
     }
     @Override
     public void onPause() {
         Log.d(TAG,"onPause");
         super.onPause();
-
-        unregisterReceiver(mUsbReceiver);
-        try {
-            mCard.PowerOff();
-        } catch (FtBlueReadException e) {
-            e.printStackTrace();
-        }
-        mCard.close();
-        this.mCard = null;
-        this.mUsbManager = null;
-        this.mPermissionIntent = null;
-        this.mDevice = null;
+        clearAllListener();
 
     }
+
+    private void clearAllListener(){
+        unregisterReceiver(mUsbReceiver);
+        clearCardAndDevice();
+        this.mUsbManager = null;
+    }
+
+    private void clearCardAndDevice(){
+        if(mCard != null) {
+            try {
+                mCard.PowerOff();
+            } catch (FtBlueReadException e) {
+                e.printStackTrace();
+            }
+            mCard.close();
+            this.mCard = null;
+        }
+        this.mDevice = null;
+    }
+
 
     @Override
     public void onResume() {
         Log.d(TAG,"onResume");
         super.onResume();
         StartCardReader();
-        if(mDevice != null){
-            OpenCard();
-        }
+
 
     }
 
@@ -137,25 +166,18 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
     private void StartCardReader(){
 
-        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);// start service process
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        registerReceiver(mUsbReceiver, filter);
-
+        registerUsbManager();
         HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-        Log.d(TAG,"======List the device======");
-//        int nIndex = 1;
-        mDevice = deviceIterator.next();
-//        while (deviceIterator.hasNext()) {
-//            UsbDevice device = deviceIterator.next();
-//            mDevice = device;
-//            break;
-//        }
+        if(deviceIterator.hasNext()){
+            mDevice = deviceIterator.next();
+            OpenCard(mDevice);
+        }
+
+
     }
 
-    private void OpenCard(){
+    private void OpenCard(UsbDevice mDevice){
         if(!mUsbManager.hasPermission(mDevice)) {
             mUsbManager.requestPermission(mDevice,mPermissionIntent);
         }
@@ -174,6 +196,14 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
             Log.d(TAG,"Exception: => " + e.toString());
         }
     }
+
+    private void registerUsbManager(){
+        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);// start service process
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mUsbReceiver, filter);
+    }
     private void ReadCardInfo()  {
         Log.d(TAG,"Debug -- ReadCardInfo");
         //Main thread
@@ -182,7 +212,14 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 //        setCustomerInfo(pModel);
         //Main thread
 
-        new ReadCard(this).execute(mCard);
+
+
+//        Handler handler = new Handler();
+//        TaskCanCeler taskCanceler;
+        ReadCard readCardTask = new ReadCard(this);
+//        taskCanceler = new TaskCanCeler(readCardTask);
+//        handler.postDelayed( taskCanceler, 20*1000); // task should be cancelled after 20 secs
+        readCardTask.execute(mCard);
 
     }
 
@@ -201,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         mPhoto.setMinimumHeight(dm.heightPixels);
         mPhoto.setMinimumWidth(dm.widthPixels);
         mPhoto.setImageBitmap(bm);
+
 
     }
 
@@ -281,14 +319,10 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
             String action = intent.getAction();
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
-                UsbDevice device = (UsbDevice) intent
-                        .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                UsbDevice device =  intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                 if (device != null) {
+                    OpenCard(device);
                 }
-                Log.d(TAG,"Add:  DeviceName:  " + device.getDeviceName()
-                        + "  DeviceProtocol: " + device.getDeviceProtocol()
-                        + "\n");
-                OpenCard();
 
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 UsbDevice device = intent
@@ -296,9 +330,8 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
                 Log.d(TAG,"Del: DeviceName:  " + device.getDeviceName()
                         + "  DeviceProtocol: " + device.getDeviceProtocol()
                         + "\n");
-                if (null != mCard) {
-                    /* off our */
-                    // finish();
+                if (mCard != null) {
+                    clearCardAndDevice();
                 }
 
             }
@@ -309,47 +342,19 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
     @Override
     public void onClick(View v) {
         if (v == mCreateLead) {
-            Log.d(TAG,"Debug -- click create Prospect");
-            String employeeId = String.valueOf(mEmployeeId.getText());
-            Log.d(TAG,"Debug -- click  mEmployeeId.getText()"+employeeId);
-            this.pModel.EMPLOYEE_ID = employeeId;
+            this.pModel.EMPLOYEE_ID =  String.valueOf(mEmployeeId.getText());
             String message = pModel.transformJsonRequest();
             Log.d(TAG,"Debug --  creat Prospect message ::"+message);
-            doSendRequest(message);
+//            doSendRequest(message);
+
+            HTTPCaller caller = new HTTPCaller(this);
+            caller.execute(message);
+
         }
     }
-
-//    private class ReadCard extends AsyncTask<ft_reader, Void, ProspectModel> {
-//
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//            inAnimation = new AlphaAnimation(0f, 1f);
-//            inAnimation.setDuration(200);
-//            progressBarHolder.setAnimation(inAnimation);
-//            progressBarHolder.setVisibility(View.VISIBLE);
-//        }
-//
-//        @Override
-//        protected ProspectModel doInBackground(ft_reader... ft_readers) {
-//            ProspectModel pModel = mCard.newProspectModel();
-//            pModel.transform();
-//            return pModel;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(ProspectModel tempPModel) {
-//            pModel = tempPModel;
-//            setCustomerInfo(tempPModel);
-//            mCreateLead.setEnabled(true);
-//            outAnimation = new AlphaAnimation(1f, 0f);
-//            outAnimation.setDuration(200);
-//            progressBarHolder.setAnimation(outAnimation);
-//            progressBarHolder.setVisibility(View.GONE);
-//        }
-//
-//
-//    }
+    private Boolean getEnableCreateLeadButton(){
+        return pModel != null && mEmployeeId.length() > 0;
+    }
     private static class ReadCard extends AsyncTask<ft_reader, Void, ProspectModel> {
         private final WeakReference<MainActivity> mActivity;
 
@@ -380,7 +385,57 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
             MainActivity activity = mActivity.get();
             activity.pModel = tempPModel;
             activity.setCustomerInfo(tempPModel);
-            activity.mCreateLead.setEnabled(true);
+            activity.mCreateLead.setEnabled(activity.getEnableCreateLeadButton());
+
+            removeAnimation(activity);
+
+        }
+
+        private void removeAnimation(MainActivity activity){
+            activity.outAnimation = new AlphaAnimation(1f, 0f);
+            activity.outAnimation.setDuration(200);
+            activity.progressBarHolder.setAnimation(activity.outAnimation);
+            activity.progressBarHolder.setVisibility(View.GONE);
+        }
+
+    }
+
+    private static class HTTPCaller  extends AsyncTask<String, Void, String> {
+        private final WeakReference<MainActivity> mActivity;
+
+        private HTTPCaller(MainActivity activity) {
+            mActivity = new WeakReference<>(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            MainActivity activity = mActivity.get();
+            super.onPreExecute();
+            activity.inAnimation = new AlphaAnimation(0f, 1f);
+            activity.inAnimation.setDuration(200);
+            activity.progressBarHolder.setAnimation(activity.inAnimation);
+            activity.progressBarHolder.setVisibility(View.VISIBLE);
+        }
+        @Override
+        protected String doInBackground(String... message) {
+//            MainActivity activity = mActivity.get();
+            final HTTPUtil requestUtil = new HTTPUtil(message[0]);
+            try {
+                requestUtil.getAccessToken();
+                requestUtil.sendRequest();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return requestUtil.getResponseMessage();
+        }
+
+        protected void onPostExecute(String msg) {
+            MainActivity activity = mActivity.get();
+            removeAnimation(activity);
+            activity.onResponseMessage(msg);
+        }
+
+        private void removeAnimation(MainActivity activity){
             activity.outAnimation = new AlphaAnimation(1f, 0f);
             activity.outAnimation.setDuration(200);
             activity.progressBarHolder.setAnimation(activity.outAnimation);

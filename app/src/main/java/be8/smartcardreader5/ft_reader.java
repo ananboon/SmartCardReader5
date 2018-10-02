@@ -9,7 +9,7 @@ import android.util.Log;
 import com.feitian.reader.devicecontrol.Card;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 public class ft_reader {
@@ -33,32 +33,32 @@ public class ft_reader {
 //    private byte[] CMD_EXPIRE = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x6F, 0x02, 0x00, 0x08};
     private byte[] CMD_ADDRESS = new byte[]{(byte)0x80, (byte)0xb0, 0x15, 0x79, 0x02, 0x00, 0x64};
 
-    private byte[] CMD_PHOTO1 = new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x7B, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO2 = new byte[]{(byte)0x80, (byte)0xb0, 0x02, 0x7A, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO3 = new byte[]{(byte)0x80, (byte)0xb0, 0x03, 0x79, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO4 = new byte[]{(byte)0x80, (byte)0xb0, 0x04, 0x78, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO5 = new byte[]{(byte)0x80, (byte)0xb0, 0x05, 0x77, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO6 = new byte[]{(byte)0x80, (byte)0xb0, 0x06, 0x76, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO7 = new byte[]{(byte)0x80, (byte)0xb0, 0x07, 0x75, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO8 = new byte[]{(byte)0x80, (byte)0xb0, 0x08, 0x74, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO9 = new byte[]{(byte)0x80, (byte)0xb0, 0x09, 0x73, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO10 = new byte[]{(byte)0x80, (byte)0xb0, 0x0A, 0x72, 0x02, 0x00,(byte)0xFF};
-    private byte[] CMD_PHOTO11 = new byte[]{(byte)0x80, (byte)0xb0, 0x0B, 0x71, 0x02, 0x00,(byte)0xFF};
-    private byte[] CMD_PHOTO12 = new byte[]{(byte)0x80, (byte)0xb0, 0x0C, 0x70, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO13 = new byte[]{(byte)0x80, (byte)0xb0, 0x0D, 0x6F, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO14 = new byte[]{(byte)0x80, (byte)0xb0, 0x0E, 0x6E, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO15 = new byte[]{(byte)0x80, (byte)0xb0, 0x0F, 0x6D, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO16 = new byte[]{(byte)0x80, (byte)0xb0, 0x10, 0x6C, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO17 = new byte[]{(byte)0x80, (byte)0xb0, 0x11, 0x6B, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO18 = new byte[]{(byte)0x80, (byte)0xb0, 0x12, 0x6A, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO19 = new byte[]{(byte)0x80, (byte)0xb0, 0x13, 0x69, 0x02, 0x00, (byte)0xFF};
-    private byte[] CMD_PHOTO20 = new byte[]{(byte)0x80, (byte)0xb0, 0x14, 0x68, 0x02, 0x00, (byte)0xFF};
+    private byte[][] CMD_PHOTO = new byte[][]{
+            new byte[]{(byte)0x80, (byte)0xb0, 0x01, 0x7B, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x02, 0x7A, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x03, 0x79, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x04, 0x78, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x05, 0x77, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x06, 0x76, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x07, 0x75, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x08, 0x74, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x09, 0x73, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0A, 0x72, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0B, 0x71, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0C, 0x70, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0D, 0x6F, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0E, 0x6E, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x0F, 0x6D, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x10, 0x6C, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x11, 0x6B, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x12, 0x6A, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x13, 0x69, 0x02, 0x00, (byte)0xFF},
+            new byte[]{(byte)0x80, (byte)0xb0, 0x14, 0x68, 0x02, 0x00, (byte)0xFF}
+    };
 
     @SuppressLint({ "NewApi", "NewApi" })
     public ft_reader(UsbManager mUsbManager, UsbDevice mDevice) {
-        // public Card(UsbManager mManager, UsbDevice mDev,Handler mHandler)
         inner_card = new Card(mUsbManager, mDevice, null);
-        // TODO Auto-generated constructor stub
     }
 
     public String getReaderName() {
@@ -86,9 +86,6 @@ public class ft_reader {
     }
 
     public int PowerOn() throws FtBlueReadException {
-        // if(inner_card.getcardStatus() == STATUS.CARD_ABSENT){
-        // throw new FtBlueReadException("card is absent");
-        // }
         int ret = inner_card.PowerOn();
         if (ret != STATUS.RETURN_SUCCESS) {
             throw new FtBlueReadException("Power On Failed");
@@ -122,14 +119,14 @@ public class ft_reader {
         return inner_card.FtWriteFlash(buf, offset, len);
     }
     public int getProtocol() throws FtBlueReadException {
-        if (isPowerOn == false) {
+        if (!isPowerOn) {
             throw new FtBlueReadException("Power Off already");
         }
         return inner_card.getProtocol();
     }
 
     public byte[] getAtr() throws FtBlueReadException {
-        if (isPowerOn == false) {
+        if (!isPowerOn) {
             throw new FtBlueReadException("Power Off already");
         }
         return inner_card.getAtr();
@@ -151,7 +148,7 @@ public class ft_reader {
                          int rx_length[], final byte rx_buffer[]) throws FtBlueReadException {
 
         int ret = 0;
-        if (isPowerOn == false) {
+        if (!isPowerOn) {
             throw new FtBlueReadException("Power Off already");
         }
 
@@ -178,7 +175,6 @@ public class ft_reader {
     }
 
     public int close() {
-        // TODO Auto-generated method stub
         return inner_card.close();
     }
     /* for dukpt test */
@@ -206,39 +202,24 @@ public class ft_reader {
     private byte[] getImage(){
         Log.d(TAG,"Debug -- getImage:: ");
 
-        byte[] array = getData(CMD_PHOTO1);
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO2));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO3));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO4));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO5));
-        Log.d(TAG,"Debug -- getImage 5:: ");
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO6));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO7));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO8));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO9));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO10));
-        Log.d(TAG,"Debug -- getImage 10:: ");
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO11));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO12));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO13));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO14));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO15));
-        Log.d(TAG,"Debug -- getImage 15:: ");
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO16));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO17));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO18));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO19));
-        array = ArrayUtils.addAll(array,getData(CMD_PHOTO20));
-        Log.d(TAG,"Debug -- getImage 20:: ");
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        byte[] buffer;
+        for(Integer i = 0; i<this.CMD_PHOTO.length;i++){
+            Log.d(TAG,"Debug -- byte i:: "+i);
+            buffer = getData(CMD_PHOTO[i]);
+            byteBuffer.write(buffer,0,buffer.length);
+        }
 
-        return array;
+        return byteBuffer.toByteArray();
     }
 
     private byte[] getData(byte[] cmd){
         Integer checkByte = 2;
         byte[] array = new byte[258];
         int[] receiveln = new int[2];
+        Log.d(TAG,"DEBUG cmd :: "+cmd);
         int ret = inner_card.transApdu(cmd.length, cmd, receiveln, array);
+        Log.d(TAG,"DEBUG ret :: "+ret);
         LogCardStatus(ret,"Request");
         ret = inner_card.transApdu(req.length+1, ArrayUtils.addAll(req,cmd[cmd.length-1]), receiveln, array);
         LogCardStatus(ret,"Response");

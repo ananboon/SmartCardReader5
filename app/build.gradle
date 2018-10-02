@@ -31,3 +31,4 @@ dependencies {
     implementation files('libs/iR301_v2.0.8_release.jar')
     implementation 'org.apache.commons:commons-lang3:3.6'
 }
+

@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">SmartCardReader</string>
 
+    <string name="CUSTOMER_INFO_TITLE">ข้อมูลลูกค้า</string>
+    <string name="CUSTOMER_PHOTO_DESC">รูปภาพลูกค้า</string>
     <string name="EMPLOYEEID_LABEL">รหัสพนักงาน</string>
     <string name="THName_LABEL">ชื่อ</string>
     <string name="ENName_LABEL">Name</string>
@@ -9,4 +11,5 @@
     <string name="IDENT_LABEL">เลขบัตรประชาชน</string>
     <string name="ADRESS_LABEL">ที่อยู่</string>
     <string name="B_CREATE_LEAD_LABEL">Create Lead</string>
+    <string name="EMPLOYEE_CODE_HIT">Employee code</string>
 </resources>
