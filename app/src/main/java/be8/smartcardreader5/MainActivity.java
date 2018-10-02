@@ -122,6 +122,12 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
         clearAllListener();
 
     }
+    @Override
+    public void onDestroy() {
+        Log.d(TAG,"onDestroy");
+        super.onDestroy();
+        clearAllListener();
+    }
 
     private void clearAllListener(){
         unregisterReceiver(mUsbReceiver);
@@ -152,12 +158,6 @@ public class MainActivity extends AppCompatActivity implements Runnable,View.OnC
 
     }
 
-    @Override
-    public void onDestroy() { //
-        // m_thread.stop();;
-        Log.d(TAG,"onDestroy");
-        super.onDestroy();
-    }
     @Override
     public void run() {
         // TODO Auto-generated method stub
